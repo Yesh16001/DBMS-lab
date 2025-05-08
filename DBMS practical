@@ -1,0 +1,188 @@
+-- All DBMS Practicals: Gym Management System
+
+-- 1. Table Creation with Sample Data
+
+CREATE TABLE diet_plans (
+    Diet_ID VARCHAR(10) PRIMARY KEY,
+    Diet_Type VARCHAR(50)
+);
+
+INSERT INTO diet_plans VALUES
+('D001', 'Keto Diet'),
+('D002', 'Vegan Diet'),
+('D003', 'High Protein Diet'),
+('D004', 'Low Carb Diet'),
+('D005', 'Mediterranean Diet');
+
+CREATE TABLE staff (
+    St_ID VARCHAR(10) PRIMARY KEY,
+    St_Name VARCHAR(50),
+    St_Contact VARCHAR(15),
+    St_Address VARCHAR(100)
+);
+
+INSERT INTO staff VALUES
+('ST001', 'Vansh Akarte', '9123456789', 'Nagpur'),
+('ST002', 'Himanshu Mahakalkar', '9234567890', 'Mumbai'),
+('ST003', 'Devansh Gawali', '9345678901', 'Pune'),
+('ST004', 'Vansh Gupta', '9456789012', 'Amravati'),
+('ST005', 'Vrushabh Kapse', '9567890123', 'Nagpur');
+
+CREATE TABLE gym_facilities (
+    Facility_ID VARCHAR(10) PRIMARY KEY,
+    Facility_Name VARCHAR(50),
+    St_ID VARCHAR(10),
+    FOREIGN KEY (St_ID) REFERENCES staff(St_ID)
+);
+
+INSERT INTO gym_facilities VALUES
+('F001', 'Weight Training Zone', 'ST001'),
+('F002', 'Cardio Section', 'ST002'),
+('F003', 'Yoga Room', 'ST003'),
+('F004', 'CrossFit Arena', 'ST004'),
+('F005', 'Warm-up Area', 'ST005');
+
+CREATE TABLE training_schedules (
+    Sess_ID VARCHAR(10) PRIMARY KEY,
+    Sess_Date DATE,
+    Sess_Time VARCHAR(10),
+    Sess_Duration VARCHAR(20),
+    Sess_Details VARCHAR(100),
+    F_ID VARCHAR(10),
+    FOREIGN KEY (F_ID) REFERENCES gym_facilities(Facility_ID)
+);
+
+INSERT INTO training_schedules VALUES
+('S001', '2025-02-01', '08:00', '1 hour', 'Strength Training', 'F001'),
+('S002', '2025-02-02', '09:30', '1.5 hours', 'Cardio Session', 'F002'),
+('S003', '2025-02-03', '07:45', '45 mins', 'Yoga Class', 'F003'),
+('S004', '2025-02-04', '10:00', '1 hour', 'CrossFit Training', 'F004'),
+('S005', '2025-02-05', '06:30', '30 mins', 'Warm-up Session', 'F005');
+
+CREATE TABLE trainers (
+    Tr_ID VARCHAR(10) PRIMARY KEY,
+    Tr_Name VARCHAR(50),
+    Tr_Contact VARCHAR(15),
+    Tr_Address VARCHAR(100),
+    Sess_ID VARCHAR(10),
+    FOREIGN KEY (Sess_ID) REFERENCES training_schedules(Sess_ID)
+);
+
+INSERT INTO trainers VALUES
+('T001', 'Aditya Gurve', '9876543210', 'Nagpur', 'S001'),
+('T002', 'Jay Thakare', '8765432109', 'Mumbai', 'S002'),
+('T003', 'Yesh Raheja', '7654321098', 'Pune', 'S003'),
+('T004', 'Abhishek Chapp', '6543210987', 'Nagpur', 'S004'),
+('T005', 'Himanshu Ghatole', '5432109876', 'Nagpur', 'S005');
+
+CREATE TABLE members (
+    Memb_ID VARCHAR(10) PRIMARY KEY,
+    Diet_ID VARCHAR(10),
+    Memb_Name VARCHAR(50),
+    Memb_Contact VARCHAR(15),
+    Memb_Address VARCHAR(100),
+    Memb_Email VARCHAR(50),
+    Tr_ID VARCHAR(10),
+    Facility_ID VARCHAR(10),
+    FOREIGN KEY (Diet_ID) REFERENCES diet_plans(Diet_ID),
+    FOREIGN KEY (Tr_ID) REFERENCES trainers(Tr_ID),
+    FOREIGN KEY (Facility_ID) REFERENCES gym_facilities(Facility_ID)
+);
+
+INSERT INTO members VALUES
+('M001', 'D001', 'Vaibhav Dhosewan', '9871234560', 'Nagpur', 'vaibhav@email.com', 'T001', 'F001'),
+('M002', 'D002', 'Aryan Koshal', '8762345671', 'Mumbai', 'aryan@email.com', 'T002', 'F002'),
+('M003', 'D003', 'Aryan Mishra', '7653456782', 'Pune', 'mishra@email.com', 'T003', 'F003'),
+('M004', 'D004', 'Prathmesh Suke', '6544567893', 'Nashik', 'suke@email.com', 'T004', 'F004'),
+('M005', 'D005', 'Vedant Jharia', '5435678904', 'Indore', 'vedant@email.com', 'T005', 'F005');
+
+CREATE TABLE fees (
+    F_ID VARCHAR(10) PRIMARY KEY,
+    F_Amount FLOAT,
+    F_Date DATE
+);
+
+INSERT INTO fees VALUES
+('F001', 500.00, '2025-02-01'),
+('F002', 750.00, '2025-03-01'),
+('F003', 600.00, '2025-02-15'),
+('F004', 900.00, '2025-02-17'),
+('F005', 450.00, '2025-02-29');
+
+-- 2. Subqueries
+
+SELECT * FROM members WHERE Diet_ID = (SELECT Diet_ID FROM diet_plans WHERE Diet_Type = 'Keto Diet');
+SELECT * FROM trainers WHERE Sess_ID IN (SELECT Sess_ID FROM training_schedules WHERE Sess_Details LIKE '%Yoga%');
+SELECT * FROM gym_facilities WHERE Facility_ID = (SELECT F_ID FROM training_schedules WHERE Sess_Duration = '1 hour');
+
+-- 3. Joins
+
+-- INNER JOIN
+SELECT m.Memb_Name, t.Tr_Name 
+FROM members m 
+INNER JOIN trainers t ON m.Tr_ID = t.Tr_ID;
+
+-- LEFT JOIN
+SELECT t.Tr_Name, ts.Sess_Details 
+FROM trainers t 
+LEFT JOIN training_schedules ts ON t.Sess_ID = ts.Sess_ID;
+
+-- RIGHT JOIN
+SELECT f.Facility_Name, s.St_Name 
+FROM gym_facilities f 
+RIGHT JOIN staff s ON f.St_ID = s.St_ID;
+
+-- FULL OUTER JOIN (via UNION)
+SELECT f.Facility_Name, s.St_Name 
+FROM gym_facilities f 
+LEFT JOIN staff s ON f.St_ID = s.St_ID
+UNION 
+SELECT f.Facility_Name, s.St_Name 
+FROM gym_facilities f 
+RIGHT JOIN staff s ON f.St_ID = s.St_ID;
+
+-- Self JOIN
+SELECT m1.Memb_Name AS Member1, m2.Memb_Name AS Member2, m1.Tr_ID 
+FROM members m1 
+JOIN members m2 ON m1.Tr_ID = m2.Tr_ID AND m1.Memb_ID <> m2.Memb_ID;
+
+-- 4. Trigger (MySQL)
+
+DELIMITER //
+CREATE TRIGGER trg_check_fee_amount
+BEFORE INSERT ON fees
+FOR EACH ROW
+BEGIN
+  IF NEW.F_Amount < 100 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Fee amount must be at least 100';
+  END IF;
+END;//
+DELIMITER ;
+
+-- 5. View
+
+CREATE VIEW member_trainer_view AS
+SELECT m.Memb_Name, t.Tr_Name, d.Diet_Type
+FROM members m
+JOIN trainers t ON m.Tr_ID = t.Tr_ID
+JOIN diet_plans d ON m.Diet_ID = d.Diet_ID;
+
+-- 6. Indexes
+
+CREATE INDEX idx_member_name ON members(Memb_Name);
+CREATE INDEX idx_session_date ON training_schedules(Sess_Date);
+
+-- 7. PL/SQL Procedure (SQL*Plus)
+
+SET SERVEROUTPUT ON;
+CREATE OR REPLACE PROCEDURE pay_fee(
+  p_amount IN NUMBER
+) IS
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Payment processed. Amount: ' || p_amount);
+EXCEPTION
+  WHEN OTHERS THEN
+    ROLLBACK;
+    DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END pay_fee;
+/
